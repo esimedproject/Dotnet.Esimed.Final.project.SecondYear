@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiMobile", "ApiMobile\ApiMobile.csproj", "{0092E82E-EC0A-4494-9907-0B05B0B163EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiMobile", "ApiMobile\ApiMobile.csproj", "{0092E82E-EC0A-4494-9907-0B05B0B163EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

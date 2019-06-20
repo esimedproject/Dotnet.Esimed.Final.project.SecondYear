@@ -3,12 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ApiMobile.Models;
 
 namespace ApiMobile.Models
 {
     public class Context : DbContext
     {
         public Context(DbContextOptions<Context> options) : base(options) { }
+
+        public DbSet<Users> User { get; set; }
+        public DbSet<Magazines> Magazine { get; set; }
+        public DbSet<Contacts> Contact { get; set; }
+        public DbSet<Subscribes> Subscribe { get; set; }
+        public DbSet<Payments> Payment { get; set; }
+        public DbSet<Admins> Admin { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,24 +27,21 @@ namespace ApiMobile.Models
             modelBuilder.Entity<Subscribes>().ToTable("Subscribes");
             modelBuilder.Entity<Users>().ToTable("Users");
             modelBuilder.Entity<Contacts>()
-                .HasOne<Users>(u => u.Users)
-                .WithMany(c => c.Contact)
+                .HasMany<Users>(u => u.UsersContact)
+                .WithOne(c => c.Contact)
                 .HasForeignKey(s => s.UserContactID);
             modelBuilder.Entity<Payments>()
-                .HasOne<Subscribes>(s => s.Subscribe)
-                .WithMany(g => g.Payment)
-                .HasForeignKey(s => s.SubscribeID);
+                .HasMany<Subscribes>(s => s.SubscribesPayment)
+                .WithOne(g => g.PaymentsSubscribes)
+                .HasForeignKey(s => s.SubscribesPaymentID);
             modelBuilder.Entity<Magazines>()
-                .HasOne<Subscribes>(m=>m.Subscribes)
-                .WithMany(p=>p.Magazine)
-                .HasForeignKey(s => s.SubscribesID);
-        }
-
-        public DbSet<Users> User { get; set; }
-        public DbSet<Magazines> Magazine { get; set; }
-        public DbSet<Contacts> Contact { get; set; }
-        public DbSet<Subscribes> Subscribe { get; set; }
-        public DbSet<Payments> Payment { get; set; }
-        public DbSet<Admins> Admin { get; set; }
+                .HasMany<Subscribes>(m=>m.SubscribeMagazine)
+                .WithOne(p=>p.MagazinesSubscribes)
+                .HasForeignKey(s => s.SubscribesMagazineID);
+            modelBuilder.Entity<Subscribes>()
+                .HasMany<Users>(j=> j.UsersSubscribe)
+                .WithOne(h => h.Subscribe)
+                .HasForeignKey(x => x.UserSubscribeID);
+        }       
     }
 }

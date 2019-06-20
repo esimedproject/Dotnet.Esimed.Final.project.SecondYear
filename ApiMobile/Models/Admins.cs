@@ -14,8 +14,9 @@ namespace ApiMobile.Models
         [StringLength(50, ErrorMessage = "Ne peux dépasser 50 caractères.")]
         [Display(Name = "Email")]
         [Required]
-        public string email { get; set; }
+        public string Email { get; set; }
+        [Required]
         [Display(Name = "Mots de passe")]
-        public string password { get; set; }
+        public string Password { get; set; }
     }
 }

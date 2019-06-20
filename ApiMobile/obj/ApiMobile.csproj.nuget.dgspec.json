@@ -47,6 +47,10 @@
               "target": "Package",
               "version": "[8.4.0, )"
             },
+            "JWT": {
+              "target": "Package",
+              "version": "[5.2.0, )"
+            },
             "Microsoft.AspNetCore.App": {
               "suppressParent": "All",
               "target": "Package",
@@ -74,6 +78,10 @@
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[2.1.1, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[5.4.0, )"
             }
           },
           "imports": [

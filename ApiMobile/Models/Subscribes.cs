@@ -13,18 +13,17 @@ namespace ApiMobile.Models
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}", ApplyFormatInEditMode = true)]
         [Required]
-        public DateTime Start_date_subscribe { get; set; }
+        public DateTime? Start_date_subscribe { get; set; }
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}", ApplyFormatInEditMode = true)]
         [Required]
-        public DateTime End_date_subscribe { get; set; }       
-        public int MagazinesID { get; set; }    
-        public int UsersID { get; set; }
-        
-        public Magazines Magazines { get; set; }
-        public Users Users { get; set; }
+        public DateTime? End_date_subscribe { get; set; }
+        public ICollection<Users> UsersSubscribe { get; set; }
+        public int? SubscribesPaymentID { get; set; }
+        public int? SubscribesMagazineID { get; set; }
+        public Payments PaymentsSubscribes { get; set; }
+        public Magazines MagazinesSubscribes { get; set; }
 
-        public ICollection<Magazines> Magazine { get; set; }
-        public ICollection<Payments> Payment { get; set; }
+
     }
 }

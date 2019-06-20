@@ -1,0 +1,14 @@
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\bin\Release\netcoreapp2.1\ApiMobile.deps.json
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\bin\Release\netcoreapp2.1\ApiMobile.runtimeconfig.json
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\bin\Release\netcoreapp2.1\ApiMobile.runtimeconfig.dev.json
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\bin\Release\netcoreapp2.1\ApiMobile.dll
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\bin\Release\netcoreapp2.1\ApiMobile.pdb
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.csprojAssemblyReference.cache
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.csproj.CoreCompileInputs.cache
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.RazorAssemblyInfo.cache
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.RazorAssemblyInfo.cs
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.AssemblyInfoInputs.cache
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.AssemblyInfo.cs
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.RazorTargetAssemblyInfo.cache
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.dll
+C:\Users\loicw\source\repos\ApiMobile\ApiMobile\obj\Release\netcoreapp2.1\ApiMobile.pdb
