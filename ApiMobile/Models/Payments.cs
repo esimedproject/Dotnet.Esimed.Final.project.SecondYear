@@ -19,6 +19,8 @@ namespace ApiMobile.Models
         [Display(Name = "Status")]
         [Required]
         public bool Status { get; set; }
+        [Display(Name = "identifiant de l'entreprise")]
+        public string uuid { get; set; }
         [Display(Name = "Moyen de paiement")]
         [DefaultValue("Card")]
         public string Means_of_payment { get; set; }

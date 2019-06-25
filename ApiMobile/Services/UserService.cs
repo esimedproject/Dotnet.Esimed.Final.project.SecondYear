@@ -14,60 +14,91 @@ namespace ApiMobile.Services
     public interface IUserService
     {
         Users Authenticate(string email, string password);
+        Users GetById(int id);
+        void Delete(int id);
+        void Update(Users user, string password = null);
+        Users Create(Users user, string password);
         IEnumerable<Users> GetAll();
     }
 
     public class UserService : IUserService
     {
-        // users hardcoded for simplicity, store in a db with hashed passwords in production applications
-        private List<Users> _users = new List<Users>
-        {
-            new Users { Id = 3, Email = "loic.wernert@outlook.fr", Password = "secret" }
-        };
+        private Context _context;
 
-        private readonly AppSettings _appSettings;
-
-        public UserService(IOptions<AppSettings> appSettings)
+        public UserService( Context context)
         {
-            _appSettings = appSettings.Value;
+            _context = context;
         }
-
         public Users Authenticate(string email, string password)
         {
-            var user = _users.SingleOrDefault(x => x.Email == email && x.Password == password);
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+                return null;
 
-            // return null if user not found
+            var user = _context.User.SingleOrDefault(x => x.Email == email);
+            // check if username exists
             if (user == null)
                 return null;
 
-            // authentication successful so generate jwt token
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Email, user.Id.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            user.AuthentificationKey = tokenHandler.WriteToken(token);
-
-            // remove password before returning
-            user.Password = null;
-
+            // authentication successful
             return user;
         }
 
         public IEnumerable<Users> GetAll()
         {
-            // return users without passwords
-            return _users.Select(x => {
-                x.Password = null;
-                return x;
-            });
+            return _context.User;
+        }
+
+        public void Delete(int id)
+        {
+            var user = _context.User.Find(id);
+            if (user != null)
+            {
+                _context.User.Remove(user);
+                _context.SaveChanges();
+            }
+        }
+
+        public Users GetById(int id)
+        {
+            return _context.User.Find(id);
+        }
+
+        public Users Create(Users user, string password)
+        {
+            // validation
+            if (string.IsNullOrWhiteSpace(password))
+                throw new AppException("Mots de passe requis");
+
+            if (_context.User.Any(x => x.Email == user.Email))
+                throw new AppException("Username \"" + user.Email + "\" est déjà prit. ");
+
+            _context.User.Add(user);
+            _context.SaveChanges();
+
+            return user;
+        }
+
+        public void Update(Users userParam, string password = null)
+        {
+            var user = _context.User.Find(userParam.Id);
+
+            if (user == null)
+                throw new AppException("User not found");
+
+            if (userParam.Email != user.Email)
+            {
+                // username has changed so check if the new username is already taken
+                if (_context.User.Any(x => x.Email == userParam.Email))
+                    throw new AppException("Email " + userParam.Email + " is already taken");
+            }
+
+            // update user properties
+            user.Firstname = userParam.Firstname;
+            user.Lastname = userParam.Lastname;
+            user.Email = userParam.Email;
+
+            _context.User.Update(user);
+            _context.SaveChanges();
         }
     }
 }

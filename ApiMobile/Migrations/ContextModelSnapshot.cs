@@ -85,6 +85,8 @@ namespace ApiMobile.Migrations
 
                     b.Property<bool>("Status");
 
+                    b.Property<string>("uuid");
+
                     b.HasKey("Id");
 
                     b.ToTable("Payments");

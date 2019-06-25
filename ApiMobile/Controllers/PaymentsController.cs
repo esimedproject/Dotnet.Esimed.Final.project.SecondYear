@@ -9,6 +9,7 @@ using ApiMobile.Models;
 
 namespace ApiMobile.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentsController : ControllerBase

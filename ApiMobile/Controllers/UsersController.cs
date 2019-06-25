@@ -1,39 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
 using ApiMobile.Models;
-using ApiMobile.Services; 
+using ApiMobile.Services;
+using ApiMobile.Helpers;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System;
 
 namespace ApiMobile.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class UsersController : ControllerBase
     {
-        //private readonly Context _context;
         private IUserService _userService;
+        private readonly AppSettings _appSettings;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, IOptions<AppSettings> appSettings)
         {
             _userService = userService;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("Authenticate")]
-        public IActionResult Authenticate([FromBody]Users userParam)
-        {
-            var user = _userService.Authenticate(userParam.Email, userParam.Password);
-
-            if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
-
-            return Ok(user);
+            _appSettings = appSettings.Value;
         }
 
         [HttpGet]
@@ -43,113 +33,77 @@ namespace ApiMobile.Controllers
             return Ok(users);
         }
 
-        // -- vanilla -- 
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var user = _userService.GetById(id);
+            return Ok(user);
+        }
 
-        //public UsersController(Context context)
-        //{
-        //    _context = context;
-        //}
+        [AllowAnonymous]
+        [HttpPost("Authenticate")]
+        public IActionResult Authenticate([FromBody] Users users)
+        {
+            var user = _userService.Authenticate(users.Email, users.Password);
 
-        //// GET: api/Users
-        //[HttpGet]
-        //public IEnumerable<Users> GetUser()
-        //{
-        //    return _context.User;
-        //}
+            if (user == null)
+                return BadRequest(new { message = "Username or password is incorrect" });
 
-        //// GET: api/Users/5
-        //[HttpGet("{id}")]
-        //public async Task<IActionResult> GetUsers([FromRoute] int id)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.Id.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
 
-        //    var users = await _context.User.FindAsync(id);
+             user.AuthentificationKey = tokenString; 
 
-        //    if (users == null)
-        //    {
-        //        return NotFound();
-        //    }
+            return Ok(new {Token = tokenString});
+        }
 
-        //    return Ok(users);
-        //}
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register([FromBody]Users user)
+        {
+            try
+            {
+                _userService.Create(user, user.Password);
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
-        //// PUT: api/Users/5
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutUsers([FromRoute] int id, [FromBody] Users users)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody]Users user)
+        {
+            user.Id = id;
+            try
+            {
+                _userService.Update(user, user.Password);
+                return Ok();
+            }
+            catch (AppException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
 
-        //    if (id != users.Id)
-        //    {
-        //        return BadRequest();
-        //    }
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            _userService.Delete(id);
+            return Ok();
+        }
 
-        //    _context.Entry(users).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!UsersExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
-
-        //// POST: api/Users
-        //[HttpPost]
-        //public async Task<IActionResult> PostUsers([FromBody] Users users)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    _context.User.Add(users);
-        //    await _context.SaveChangesAsync();
-
-        //    return CreatedAtAction("GetUsers", new { id = users.Id }, users);
-        //}
-
-        //// DELETE: api/Users/5
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteUsers([FromRoute] int id)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    var users = await _context.User.FindAsync(id);
-        //    if (users == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _context.User.Remove(users);
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok(users);
-        //}
-
-        //private bool UsersExists(int id)
-        //{
-        //    return _context.User.Any(e => e.Id == id);
-        //}
     }
 }
