@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using ApiMobile.Models;
 using ApiMobile.Helpers;
 
@@ -13,12 +7,13 @@ namespace ApiMobile.Services
 {
     public interface IUserService
     {
-        Users Authenticate(string email, string password);
+        Users Authenticate( string email, string password);
         Users GetById(int id);
         void Delete(int id);
         void Update(Users user, string password = null);
         Users Create(Users user, string password);
         IEnumerable<Users> GetAll();
+        Context GetContext(); 
     }
 
     public class UserService : IUserService
@@ -29,7 +24,7 @@ namespace ApiMobile.Services
         {
             _context = context;
         }
-        public Users Authenticate(string email, string password)
+        public Users Authenticate( string email, string password)
         {
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
                 return null;
@@ -38,11 +33,14 @@ namespace ApiMobile.Services
             // check if username exists
             if (user == null)
                 return null;
-
+            
             // authentication successful
             return user;
         }
-
+        public Context GetContext()
+        {
+            return _context; 
+        }
         public IEnumerable<Users> GetAll()
         {
             return _context.User;

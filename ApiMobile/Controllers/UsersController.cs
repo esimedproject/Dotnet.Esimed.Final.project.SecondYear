@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System;
+using System.Data.SqlClient;
 
 namespace ApiMobile.Controllers
 {
@@ -19,6 +20,7 @@ namespace ApiMobile.Controllers
     {
         private IUserService _userService;
         private readonly AppSettings _appSettings;
+        
 
         public UsersController(IUserService userService, IOptions<AppSettings> appSettings)
         {
@@ -36,8 +38,13 @@ namespace ApiMobile.Controllers
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var user = _userService.GetById(id);
-            return Ok(user);
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if(int.Parse(useremail) == id)
+            {
+                var user = _userService.GetById(id);
+                return Ok(user);
+            }
+            return Ok(); 
         }
 
         [AllowAnonymous]
@@ -47,7 +54,7 @@ namespace ApiMobile.Controllers
             var user = _userService.Authenticate(users.Email, users.Password);
 
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                return BadRequest(new { message = "Email or password is incorrect" });
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
@@ -61,11 +68,12 @@ namespace ApiMobile.Controllers
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
+            string tokenString = tokenHandler.WriteToken(token);
 
-             user.AuthentificationKey = tokenString; 
-
-            return Ok(new {Token = tokenString});
+            user.AuthentificationKey = tokenString; 
+            _userService.GetContext().SaveChangesAsync();
+            
+            return Ok(new {Token = tokenString, ID = user.Id});
         }
 
         [AllowAnonymous]
@@ -87,22 +95,32 @@ namespace ApiMobile.Controllers
         public IActionResult Update(int id, [FromBody]Users user)
         {
             user.Id = id;
-            try
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
             {
-                _userService.Update(user, user.Password);
-                return Ok();
+                try
+                {
+                    _userService.Update(user, user.Password);
+                    return Ok();
+                }
+                catch (AppException ex)
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
             }
-            catch (AppException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok();                   
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            _userService.Delete(id);
-            return Ok();
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                _userService.Delete(id);
+                return Ok();
+            }
+            return Ok();            
         }
 
     }

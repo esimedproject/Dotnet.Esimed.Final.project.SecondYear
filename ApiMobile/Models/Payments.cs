@@ -10,7 +10,7 @@ namespace ApiMobile.Models
     public class Payments
     {
         [Key]
-        public int Id { get; set; }
+        public int CId { get; set; }
         [DefaultValue(0)]
         [DataType(DataType.Currency)]
         [Display(Name = "Prix")]

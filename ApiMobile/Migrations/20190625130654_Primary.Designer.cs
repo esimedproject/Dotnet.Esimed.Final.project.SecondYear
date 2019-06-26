@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ApiMobile.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20190624154149_Primary")]
+    [Migration("20190625130654_Primary")]
     partial class Primary
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

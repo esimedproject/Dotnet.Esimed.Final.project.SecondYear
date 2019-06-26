@@ -92,12 +92,12 @@ namespace ApiMobile.Data
                     Start_date_subscribe =DateTime.Parse("12-05-2017"),
                     End_date_subscribe =DateTime.Parse("12-05-2018"),
                     SubscribesMagazineID = Magazine.Single(k=>k.Id == 1).Id,
-                    SubscribesPaymentID = Payment.Single(o=>o.Id == 2).Id},
+                    SubscribesPaymentID = Payment.Single(o=>o.CId == 2).CId},
                 new Subscribes{
                     Start_date_subscribe =DateTime.Parse("06-11-2015"),
                     End_date_subscribe =DateTime.Parse("06-11-2016"),
                     SubscribesMagazineID = Magazine.Single(k=>k.Id == 2).Id,
-                    SubscribesPaymentID = Payment.Single(o=>o.Id == 1).Id}};
+                    SubscribesPaymentID = Payment.Single(o=>o.CId == 1).CId}};
             foreach (Subscribes d in Subscribe)
             {
                 _context.Subscribe.Add(d);
@@ -115,7 +115,6 @@ namespace ApiMobile.Data
                     Address ="Paris 8ème",
                     Phone = 0788161749,
                     Password ="password",
-                    AuthentificationKey ="jesuisuneautrecle",
                     UserContactID = Contact.Single(f=>f.Id == 1).Id,
                     UserSubscribeID = Subscribe.Single(h=>h.Id == 1).Id },
                 new Users {
@@ -126,7 +125,6 @@ namespace ApiMobile.Data
                     Date_of_birth = DateTime.Parse("10-02-2011"),
                     Address ="Paris 7ème", Phone= 0788161749,
                     Password ="password2",
-                    AuthentificationKey ="jesuisunecle",
                     UserContactID = Contact.Single(f=>f.Id == 2).Id,
                     UserSubscribeID = Subscribe.Single(h=>h.Id == 2).Id  }
             };

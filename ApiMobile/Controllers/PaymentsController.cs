@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiMobile.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ApiMobile.Controllers
 {
@@ -56,7 +55,7 @@ namespace ApiMobile.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != payments.Id)
+            if (id != payments.CId)
             {
                 return BadRequest();
             }
@@ -94,7 +93,7 @@ namespace ApiMobile.Controllers
             _context.Payment.Add(payments);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPayments", new { id = payments.Id }, payments);
+            return CreatedAtAction("GetPayments", new { id = payments.CId }, payments);
         }
 
         // DELETE: api/Payments/5
@@ -120,7 +119,7 @@ namespace ApiMobile.Controllers
 
         private bool PaymentsExists(int id)
         {
-            return _context.Payment.Any(e => e.Id == id);
+            return _context.Payment.Any(e => e.CId == id);
         }
     }
 }
