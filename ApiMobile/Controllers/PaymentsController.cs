@@ -1,23 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ApiMobile.Models;
+using ApiMobile.Services;
+using Microsoft.Extensions.Options;
+using ApiMobile.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace ApiMobile.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentsController : ControllerBase
     {
         private readonly Context _context;
+        private IUserService _userService;
+        private readonly AppSettings _appSettings;
 
-        public PaymentsController(Context context)
+        public PaymentsController(Context context, IUserService userService, IOptions<AppSettings> appSettings)
         {
             _context = context;
+            _userService = userService;
+            _appSettings = appSettings.Value;
         }
 
         // GET: api/Payments
@@ -79,6 +92,35 @@ namespace ApiMobile.Controllers
             }
 
             return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Authenticate")]
+        public IActionResult Authenticate([FromBody] Users users)
+        {
+            var user = _userService.Authenticate(users.Email, users.Password);
+
+            if (user == null)
+                return BadRequest(new { message = "Email or password is incorrect" });
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.Id.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            string tokenString = tokenHandler.WriteToken(token);
+
+            user.AuthentificationKey = tokenString;
+            _userService.GetContext().SaveChangesAsync();
+
+            return Ok(new { Token = tokenString, ID = user.Id });
         }
 
         // POST: api/Payments

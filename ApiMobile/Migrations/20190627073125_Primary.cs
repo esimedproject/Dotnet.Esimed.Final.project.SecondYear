@@ -58,7 +58,7 @@ namespace ApiMobile.Migrations
                 name: "Payments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
+                    CId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     PaymentAmount = table.Column<double>(nullable: false),
                     Status = table.Column<bool>(nullable: false),
@@ -67,7 +67,7 @@ namespace ApiMobile.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Payments", x => x.Id);
+                    table.PrimaryKey("PK_Payments", x => x.CId);
                 });
 
             migrationBuilder.CreateTable(
@@ -94,7 +94,7 @@ namespace ApiMobile.Migrations
                         name: "FK_Subscribes_Payments_SubscribesPaymentID",
                         column: x => x.SubscribesPaymentID,
                         principalTable: "Payments",
-                        principalColumn: "Id",
+                        principalColumn: "CId",
                         onDelete: ReferentialAction.Restrict);
                 });
 

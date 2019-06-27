@@ -9,7 +9,6 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System;
-using System.Data.SqlClient;
 
 namespace ApiMobile.Controllers
 {
@@ -43,6 +42,10 @@ namespace ApiMobile.Controllers
             {
                 var user = _userService.GetById(id);
                 return Ok(user);
+            }
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
             return Ok(); 
         }
