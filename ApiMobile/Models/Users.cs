@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace ApiMobile.Models
 {
@@ -12,6 +13,7 @@ namespace ApiMobile.Models
         public int Id { get; set; }
         [Display(Name = "Email")]
         [Required]
+        [EmailAddress]
         public string Email { get; set; }
         [StringLength(50, ErrorMessage = "Ne peux dépasser 50 caractères.")]
         [Display(Name = "Prénom")]
@@ -30,9 +32,11 @@ namespace ApiMobile.Models
         [Display(Name = "Adresse")]
         public string Address { get; set; }
         [Display(Name = "Numéro de téléphone")]
+        [Phone]
         public int? Phone { get; set; }
         [Display(Name = "Mots de passe")]
         [Required]
+        [PasswordPropertyText]
         public string Password { get; set; }
         [Display(Name = "clé d'authentification")]
         public string AuthentificationKey { get; set; }

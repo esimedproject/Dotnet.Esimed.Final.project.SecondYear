@@ -86,6 +86,7 @@ namespace ApiMobile.Controllers
         [HttpPost]
         public async Task<IActionResult> PostMagazines([FromBody] Magazines magazines)
         {
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);

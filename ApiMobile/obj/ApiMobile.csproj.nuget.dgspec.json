@@ -79,6 +79,10 @@
               "target": "Package",
               "version": "[2.1.1, )"
             },
+            "RestSharp": {
+              "target": "Package",
+              "version": "[106.6.9, )"
+            },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[5.4.0, )"

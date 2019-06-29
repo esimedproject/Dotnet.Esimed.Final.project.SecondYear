@@ -14,10 +14,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using RestSharp; 
 
 namespace ApiMobile.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentsController : ControllerBase
@@ -94,6 +95,7 @@ namespace ApiMobile.Controllers
             return NoContent();
         }
 
+        // POST: api/Payments/Authenticate
         [AllowAnonymous]
         [HttpPost("Authenticate")]
         public IActionResult Authenticate([FromBody] Users users)
@@ -123,17 +125,30 @@ namespace ApiMobile.Controllers
             return Ok(new { Token = tokenString, ID = user.Id });
         }
 
+        // POST: api/Payments/access
+        [HttpPost("Access")]
+        public IActionResult Access([FromBody] Payments payments)
+        {
+            RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
+            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.CId}/{payments.cardid}/{payments.cardmonth}/{payments.cardyear}/{payments.PaymentAmount}", Method.GET);
+            var response = ClientRest.Execute(RequestRest);
+            return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
+        }
+
         // POST: api/Payments
         [HttpPost]
         public async Task<IActionResult> PostPayments([FromBody] Payments payments)
         {
+
             if (!ModelState.IsValid)
             {
+                Console.WriteLine("erreur retour 1");
                 return BadRequest(ModelState);
             }
-
+            Console.WriteLine("erreur retour 2");
             _context.Payment.Add(payments);
             await _context.SaveChangesAsync();
+            Console.WriteLine("erreur retour 3");
 
             return CreatedAtAction("GetPayments", new { id = payments.CId }, payments);
         }

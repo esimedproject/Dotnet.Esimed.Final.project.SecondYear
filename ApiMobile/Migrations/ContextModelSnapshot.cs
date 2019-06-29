@@ -79,13 +79,11 @@ namespace ApiMobile.Migrations
                     b.Property<int>("CId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Means_of_payment");
+                    b.Property<string>("MeansOfPayment");
 
                     b.Property<double>("PaymentAmount");
 
                     b.Property<bool>("Status");
-
-                    b.Property<string>("uuid");
 
                     b.HasKey("CId");
 

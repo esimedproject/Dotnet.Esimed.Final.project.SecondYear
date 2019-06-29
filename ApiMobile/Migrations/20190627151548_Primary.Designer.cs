@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ApiMobile.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20190627073125_Primary")]
+    [Migration("20190627151548_Primary")]
     partial class Primary
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -81,13 +81,11 @@ namespace ApiMobile.Migrations
                     b.Property<int>("CId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Means_of_payment");
+                    b.Property<string>("MeansOfPayment");
 
                     b.Property<double>("PaymentAmount");
 
                     b.Property<bool>("Status");
-
-                    b.Property<string>("uuid");
 
                     b.HasKey("CId");
 

@@ -37,10 +37,10 @@ namespace ApiMobile.Data
             {
                 new Payments{
                     PaymentAmount = 100, Status=true,
-                    Means_of_payment ="Card"},
+                    MeansOfPayment ="cardpay"},
                 new Payments{
                     PaymentAmount = 50, Status=false,
-                    Means_of_payment ="Card"}
+                    MeansOfPayment ="cardpay"}
             };
             foreach (Payments s in Payment)
             {

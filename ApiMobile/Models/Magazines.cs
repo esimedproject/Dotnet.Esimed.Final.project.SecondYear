@@ -25,6 +25,7 @@ namespace ApiMobile.Models
         public double Price { get; set; }
         [Display(Name = "Image")]
         [DefaultValue("/")]
+        [Url]
         public string WallpagePATH { get; set; }
 
         public ICollection<Subscribes> SubscribeMagazine { get; set; }

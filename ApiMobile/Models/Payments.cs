@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel; 
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApiMobile.Models
 {
@@ -15,15 +16,22 @@ namespace ApiMobile.Models
         [DataType(DataType.Currency)]
         [Display(Name = "Prix")]
         [Required]
-        public double PaymentAmount { get; set; }
+        public double PaymentAmount { get; set; }  
+        [NotMapped]
+        [Display(Name = "cardid")]
+        public long cardid { get; set; }
+        [NotMapped]
+        [Display(Name = "cardmonth")]
+        public string cardmonth { get; set; }
+        [NotMapped]
+        [Display(Name = "cardyear")]
+        public string cardyear { get; set; }
         [Display(Name = "Status")]
-        [Required]
+        [Required]       
         public bool Status { get; set; }
-        [Display(Name = "identifiant de l'entreprise")]
-        public string uuid { get; set; }
         [Display(Name = "Moyen de paiement")]
-        [DefaultValue("Card")]
-        public string Means_of_payment { get; set; }
+        [DefaultValue("cardpay")]
+        public string MeansOfPayment { get; set; }
         public ICollection<Subscribes> SubscribesPayment { get; set; }
     }
 }

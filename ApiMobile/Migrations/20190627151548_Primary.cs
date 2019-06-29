@@ -62,8 +62,7 @@ namespace ApiMobile.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     PaymentAmount = table.Column<double>(nullable: false),
                     Status = table.Column<bool>(nullable: false),
-                    uuid = table.Column<string>(nullable: true),
-                    Means_of_payment = table.Column<string>(nullable: true)
+                    MeansOfPayment = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
