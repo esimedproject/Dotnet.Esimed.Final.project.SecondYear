@@ -26,12 +26,12 @@ namespace ApiMobile.Models
         [NotMapped]
         [Display(Name = "cardyear")]
         public string cardyear { get; set; }
-        [Display(Name = "Status")]
-        [Required]       
-        public bool Status { get; set; }
+        [Display(Name = "transaction")]
+        public long transaction { get; set; }
         [Display(Name = "Moyen de paiement")]
         [DefaultValue("cardpay")]
         public string MeansOfPayment { get; set; }
-        public ICollection<Subscribes> SubscribesPayment { get; set; }
+        public int? SubscribesPaymentID { get; set; }
+        public Subscribes subscribe { get; set; }
     }
 }

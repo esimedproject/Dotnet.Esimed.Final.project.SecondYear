@@ -27,7 +27,7 @@ namespace ApiMobile.Models
         [DefaultValue("/")]
         [Url]
         public string WallpagePATH { get; set; }
-
-        public ICollection<Subscribes> SubscribeMagazine { get; set; }
+        public int? SubscribesMagazineID { get; set; }
+        public Subscribes Subscribe { get; set; }
     }
 }

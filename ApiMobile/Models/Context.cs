@@ -26,22 +26,30 @@ namespace ApiMobile.Models
             modelBuilder.Entity<Payments>().ToTable("Payments");
             modelBuilder.Entity<Subscribes>().ToTable("Subscribes");
             modelBuilder.Entity<Users>().ToTable("Users");
-            modelBuilder.Entity<Contacts>()
-                .HasMany<Users>(u => u.UsersContact)
-                .WithOne(c => c.Contact)
-                .HasForeignKey(s => s.UserContactID);
-            modelBuilder.Entity<Payments>()
-                .HasMany<Subscribes>(s => s.SubscribesPayment)
-                .WithOne(g => g.PaymentsSubscribes)
-                .HasForeignKey(s => s.SubscribesPaymentID);
-            modelBuilder.Entity<Magazines>()
-                .HasMany<Subscribes>(m=>m.SubscribeMagazine)
-                .WithOne(p=>p.MagazinesSubscribes)
-                .HasForeignKey(s => s.SubscribesMagazineID);
-            modelBuilder.Entity<Subscribes>()
-                .HasMany<Users>(j=> j.UsersSubscribe)
-                .WithOne(h => h.Subscribe)
+
+            modelBuilder.Entity<Users>()
+                .HasMany<Subscribes>(j => j.UsersSubscribe)
+                .WithOne(h => h.user)
                 .HasForeignKey(x => x.UserSubscribeID);
+
+            modelBuilder.Entity<Users>()
+                .HasMany<Contacts>(u => u.UsersContact)
+                .WithOne(c => c.user)
+                .HasForeignKey(s => s.UserContactID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Subscribes>()
+                .HasMany<Payments>(s => s.SubscribesPayment)
+                .WithOne(g => g.subscribe)
+                .HasForeignKey(s => s.SubscribesPaymentID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Subscribes>()
+                .HasMany<Magazines>(m=>m.SubscribeMagazine)
+                .WithOne(p=>p.Subscribe)
+                .HasForeignKey(s => s.SubscribesMagazineID);
+
+
         }       
     }
 }

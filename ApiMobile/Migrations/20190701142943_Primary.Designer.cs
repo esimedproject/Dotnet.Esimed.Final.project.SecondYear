@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ApiMobile.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20190627151548_Primary")]
+    [Migration("20190701142943_Primary")]
     partial class Primary
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,7 +51,11 @@ namespace ApiMobile.Migrations
                         .IsRequired()
                         .HasMaxLength(50);
 
+                    b.Property<int?>("UserContactID");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserContactID");
 
                     b.ToTable("Contacts");
                 });
@@ -69,9 +73,13 @@ namespace ApiMobile.Migrations
 
                     b.Property<double>("Price");
 
+                    b.Property<int?>("SubscribesMagazineID");
+
                     b.Property<string>("WallpagePATH");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SubscribesMagazineID");
 
                     b.ToTable("Magazines");
                 });
@@ -85,9 +93,13 @@ namespace ApiMobile.Migrations
 
                     b.Property<double>("PaymentAmount");
 
-                    b.Property<bool>("Status");
+                    b.Property<int?>("SubscribesPaymentID");
+
+                    b.Property<long>("transaction");
 
                     b.HasKey("CId");
+
+                    b.HasIndex("SubscribesPaymentID");
 
                     b.ToTable("Payments");
                 });
@@ -103,15 +115,13 @@ namespace ApiMobile.Migrations
                     b.Property<DateTime?>("Start_date_subscribe")
                         .IsRequired();
 
-                    b.Property<int?>("SubscribesMagazineID");
+                    b.Property<bool>("Status");
 
-                    b.Property<int?>("SubscribesPaymentID");
+                    b.Property<int?>("UserSubscribeID");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubscribesMagazineID");
-
-                    b.HasIndex("SubscribesPaymentID");
+                    b.HasIndex("UserSubscribeID");
 
                     b.ToTable("Subscribes");
                 });
@@ -145,37 +155,37 @@ namespace ApiMobile.Migrations
                     b.Property<string>("Place_of_birth")
                         .HasMaxLength(100);
 
-                    b.Property<int?>("UserContactID");
-
-                    b.Property<int?>("UserSubscribeID");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserContactID");
-
-                    b.HasIndex("UserSubscribeID");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ApiMobile.Models.Subscribes", b =>
+            modelBuilder.Entity("ApiMobile.Models.Contacts", b =>
                 {
-                    b.HasOne("ApiMobile.Models.Magazines", "MagazinesSubscribes")
-                        .WithMany("SubscribeMagazine")
-                        .HasForeignKey("SubscribesMagazineID");
-
-                    b.HasOne("ApiMobile.Models.Payments", "PaymentsSubscribes")
-                        .WithMany("SubscribesPayment")
-                        .HasForeignKey("SubscribesPaymentID");
+                    b.HasOne("ApiMobile.Models.Users", "user")
+                        .WithMany("UsersContact")
+                        .HasForeignKey("UserContactID")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("ApiMobile.Models.Users", b =>
+            modelBuilder.Entity("ApiMobile.Models.Magazines", b =>
                 {
-                    b.HasOne("ApiMobile.Models.Contacts", "Contact")
-                        .WithMany("UsersContact")
-                        .HasForeignKey("UserContactID");
-
                     b.HasOne("ApiMobile.Models.Subscribes", "Subscribe")
+                        .WithMany("SubscribeMagazine")
+                        .HasForeignKey("SubscribesMagazineID");
+                });
+
+            modelBuilder.Entity("ApiMobile.Models.Payments", b =>
+                {
+                    b.HasOne("ApiMobile.Models.Subscribes", "subscribe")
+                        .WithMany("SubscribesPayment")
+                        .HasForeignKey("SubscribesPaymentID")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ApiMobile.Models.Subscribes", b =>
+                {
+                    b.HasOne("ApiMobile.Models.Users", "user")
                         .WithMany("UsersSubscribe")
                         .HasForeignKey("UserSubscribeID");
                 });

@@ -38,7 +38,8 @@ namespace ApiMobile.Controllers
         [HttpGet]
         public IEnumerable<Payments> GetPayment()
         {
-            return _context.Payment;
+            var pay = from i in _context.Payment orderby i.CId descending select i;
+            return pay;
         }
 
         // GET: api/Payments/5
@@ -58,6 +59,36 @@ namespace ApiMobile.Controllers
             }
 
             return Ok(payments);
+        }
+
+        // GET: api/Magazines/ByUser
+        [HttpGet("ByUser/{id}")]
+        public IActionResult GetById(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserPayment = from a in _context.Payment
+                                   join b in _context.Subscribe on a.SubscribesPaymentID
+                                   equals b.Id
+                                   where b.UserSubscribeID == id
+                                   where b.End_date_subscribe > DateTime.Now
+                                   select a;
+
+
+                if (UserPayment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserPayment);
+            }
+            else return Unauthorized();
         }
 
         // PUT: api/Payments/5
@@ -125,7 +156,7 @@ namespace ApiMobile.Controllers
             return Ok(new { Token = tokenString, ID = user.Id });
         }
 
-        // POST: api/Payments/access
+        //POST: api/Payments/access
         [HttpPost("Access")]
         public IActionResult Access([FromBody] Payments payments)
         {
@@ -137,20 +168,20 @@ namespace ApiMobile.Controllers
 
         // POST: api/Payments
         [HttpPost]
-        public async Task<IActionResult> PostPayments([FromBody] Payments payments)
+        public async Task<IActionResult> PostPayments(string typeofpaiment,long amount,int transac,int id)
         {
-
             if (!ModelState.IsValid)
             {
-                Console.WriteLine("erreur retour 1");
                 return BadRequest(ModelState);
-            }
-            Console.WriteLine("erreur retour 2");
-            _context.Payment.Add(payments);
-            await _context.SaveChangesAsync();
-            Console.WriteLine("erreur retour 3");
+            }else
+            {
+                typeofpaiment = "cardpay"; 
+                var objet = new Payments { MeansOfPayment = typeofpaiment, PaymentAmount = amount, transaction = transac, CId = id  };
+                _context.Payment.Add(objet);
 
-            return CreatedAtAction("GetPayments", new { id = payments.CId }, payments);
+                await _context.SaveChangesAsync();
+                return Ok();
+            }
         }
 
         // DELETE: api/Payments/5

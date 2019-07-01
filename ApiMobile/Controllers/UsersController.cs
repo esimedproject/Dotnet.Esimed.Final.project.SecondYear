@@ -47,7 +47,7 @@ namespace ApiMobile.Controllers
             {
                 return BadRequest(ModelState);
             }
-            return Ok(); 
+            return BadRequest(); 
         }
 
         [AllowAnonymous]

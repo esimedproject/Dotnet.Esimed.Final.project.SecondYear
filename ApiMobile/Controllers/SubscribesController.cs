@@ -37,7 +37,8 @@ namespace ApiMobile.Controllers
         [HttpGet]
         public IEnumerable<Subscribes> GetSubscribe()
         {
-            return _context.Subscribe;
+            var sub = from i in _context.Subscribe orderby i.End_date_subscribe descending select i;
+            return sub;
         }
 
         // GET: api/Subscribes/5
@@ -58,6 +59,7 @@ namespace ApiMobile.Controllers
 
             return Ok(subscribes);
         }
+
 
         // PUT: api/Subscribes/5
         [HttpPut("{id}")]
@@ -131,7 +133,6 @@ namespace ApiMobile.Controllers
             {
                 return BadRequest(ModelState);
             }
-
             _context.Subscribe.Add(subscribes);
             await _context.SaveChangesAsync();
 

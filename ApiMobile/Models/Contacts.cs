@@ -21,6 +21,7 @@ namespace ApiMobile.Models
         [Display(Name = "date")]
         [Required]
         public DateTime Date { get; set; }
-        public ICollection<Users> UsersContact { get; set; }
+        public int? UserContactID { get; set; }
+        public Users user { get; set; }
     }
 }

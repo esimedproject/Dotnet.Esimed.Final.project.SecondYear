@@ -36,10 +36,10 @@ namespace ApiMobile.Data
             var Payment = new Payments[]
             {
                 new Payments{
-                    PaymentAmount = 100, Status=true,
+                    PaymentAmount = 100,
                     MeansOfPayment ="cardpay"},
                 new Payments{
-                    PaymentAmount = 50, Status=false,
+                    PaymentAmount = 50,
                     MeansOfPayment ="cardpay"}
             };
             foreach (Payments s in Payment)
@@ -90,14 +90,10 @@ namespace ApiMobile.Data
 {
                 new Subscribes{
                     Start_date_subscribe =DateTime.Parse("12-05-2017"),
-                    End_date_subscribe =DateTime.Parse("12-05-2018"),
-                    SubscribesMagazineID = Magazine.Single(k=>k.Id == 1).Id,
-                    SubscribesPaymentID = Payment.Single(o=>o.CId == 2).CId},
+                    End_date_subscribe =DateTime.Parse("12-05-2018")},
                 new Subscribes{
                     Start_date_subscribe =DateTime.Parse("06-11-2015"),
-                    End_date_subscribe =DateTime.Parse("06-11-2016"),
-                    SubscribesMagazineID = Magazine.Single(k=>k.Id == 2).Id,
-                    SubscribesPaymentID = Payment.Single(o=>o.CId == 1).CId}};
+                    End_date_subscribe =DateTime.Parse("06-11-2016")}};
             foreach (Subscribes d in Subscribe)
             {
                 _context.Subscribe.Add(d);
@@ -114,19 +110,16 @@ namespace ApiMobile.Data
                     Date_of_birth = DateTime.Parse("09-01-2010"),
                     Address ="Paris 8ème",
                     Phone = 0788161749,
-                    Password ="password",
-                    UserContactID = Contact.Single(f=>f.Id == 1).Id,
-                    UserSubscribeID = Subscribe.Single(h=>h.Id == 1).Id },
+                    Password ="password"},
                 new Users {
                     Email = "alexandra.lastierier@outlook.fr",
                     Lastname = "Alexandra",
                     Firstname ="Astierier",
                     Place_of_birth ="Paris 13 ème",
                     Date_of_birth = DateTime.Parse("10-02-2011"),
-                    Address ="Paris 7ème", Phone= 0788161749,
-                    Password ="password2",
-                    UserContactID = Contact.Single(f=>f.Id == 2).Id,
-                    UserSubscribeID = Subscribe.Single(h=>h.Id == 2).Id  }
+                    Address ="Paris 7ème",
+                    Phone = 0788161749,
+                    Password ="password2"}
             };
             foreach (Users s in User)
             {

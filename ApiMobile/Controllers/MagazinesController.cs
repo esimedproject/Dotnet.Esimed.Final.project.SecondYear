@@ -6,10 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using ApiMobile.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
+using System;
 
 namespace ApiMobile.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class MagazinesController : ControllerBase
@@ -45,6 +46,35 @@ namespace ApiMobile.Controllers
             }
 
             return Ok(magazines);
+        }
+
+        // GET: api/Magazines/ByUser
+        [HttpGet("ByUser/{id}")]
+        public IActionResult GetById(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserMagazine = from a in _context.Magazine
+                                   join b in _context.Subscribe on a.SubscribesMagazineID
+                                   equals b.Id
+                                   where b.UserSubscribeID == id
+                                   where b.End_date_subscribe > DateTime.Now
+                                   select a;
+
+                if (UserMagazine == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserMagazine);
+            }
+            else return Unauthorized();
         }
 
         // PUT: api/Magazines/5

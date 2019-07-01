@@ -40,9 +40,7 @@ namespace ApiMobile.Models
         public string Password { get; set; }
         [Display(Name = "clé d'authentification")]
         public string AuthentificationKey { get; set; }
-        public int? UserContactID { get; set; }
-        public int? UserSubscribeID { get; set; }
-        public Contacts Contact { get; set; }
-        public Subscribes Subscribe { get; set; }
+        public ICollection<Contacts> UsersContact { get; set; }
+        public ICollection<Subscribes> UsersSubscribe { get; set; }
     }
 }
