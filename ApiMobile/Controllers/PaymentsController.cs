@@ -61,7 +61,7 @@ namespace ApiMobile.Controllers
             return Ok(payments);
         }
 
-        // GET: api/Magazines/ByUser
+        // GET: api/Payments/ByUser/5
         [HttpGet("ByUser/{id}")]
         public IActionResult GetById(int id)
         {
@@ -74,12 +74,10 @@ namespace ApiMobile.Controllers
                 }
 
                 var UserPayment = from a in _context.Payment
-                                   join b in _context.Subscribe on a.SubscribesPaymentID
-                                   equals b.Id
-                                   where b.UserSubscribeID == id
-                                   where b.End_date_subscribe > DateTime.Now
-                                   select a;
-
+                                  join b in _context.Subscribe on a.SubscribesPaymentID
+                                  equals b.Id
+                                  where b.UserSubscribeID == id
+                                  select a;
 
                 if (UserPayment == null)
                 {
@@ -162,6 +160,26 @@ namespace ApiMobile.Controllers
         {
             RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
             RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.CId}/{payments.cardid}/{payments.cardmonth}/{payments.cardyear}/{payments.PaymentAmount}", Method.GET);
+            var response = ClientRest.Execute(RequestRest);
+            return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
+        }
+
+        //POST: api/Payments/Refund
+        [HttpPost("Refund")]
+        public IActionResult Refund([FromBody] Payments payments)
+        {
+            RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
+            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.transaction}", Method.GET);
+            var response = ClientRest.Execute(RequestRest);
+            return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
+        }
+
+        //POST: api/Payments/PartialRefund
+        [HttpPost("PartialRefund")]
+        public IActionResult PartialRefund([FromBody] Payments payments)
+        {
+            RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
+            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.transaction}/{payments.PaymentAmount}", Method.GET);
             var response = ClientRest.Execute(RequestRest);
             return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
         }

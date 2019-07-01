@@ -59,6 +59,34 @@ namespace ApiMobile.Controllers
             return Ok(contacts);
         }
 
+        // GET: api/Payments/ByUser/5
+        [HttpGet("ByUser/{id}")]
+        public IActionResult GetById(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserPayment = from a in _context.Contact
+                                  join b in _context.User on a.UserContactID
+                                  equals b.Id
+                                  where b.Id == id
+                                  select a;
+
+                if (UserPayment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserPayment);
+            }
+            else return Unauthorized();
+        }
+
         // PUT: api/Contacts/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutContacts([FromRoute] int id, [FromBody] Contacts contacts)

@@ -8,25 +8,37 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
 using System;
+using ApiMobile.Services;
+using ApiMobile.Helpers;
+using Microsoft.Extensions.Options;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ApiMobile.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class MagazinesController : ControllerBase
     {
         private readonly Context _context;
+        private IUserService _userService;
+        private readonly AppSettings _appSettings;
 
-        public MagazinesController(Context context)
+        public MagazinesController(Context context, IUserService userService, IOptions<AppSettings> appSettings)
         {
             _context = context;
+            _userService = userService;
+            _appSettings = appSettings.Value;
         }
 
         // GET: api/Magazines
         [HttpGet]
         public IEnumerable<Magazines> GetMagazine()
         {
-            return _context.Magazine;
+            var mag = from i in _context.Magazine orderby i.Nom descending select i; 
+            return mag; 
         }
 
         // GET: api/Magazines/5
@@ -46,35 +58,6 @@ namespace ApiMobile.Controllers
             }
 
             return Ok(magazines);
-        }
-
-        // GET: api/Magazines/ByUser
-        [HttpGet("ByUser/{id}")]
-        public IActionResult GetById(int id)
-        {
-            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-            if (int.Parse(useremail) == id)
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var UserMagazine = from a in _context.Magazine
-                                   join b in _context.Subscribe on a.SubscribesMagazineID
-                                   equals b.Id
-                                   where b.UserSubscribeID == id
-                                   where b.End_date_subscribe > DateTime.Now
-                                   select a;
-
-                if (UserMagazine == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(UserMagazine);
-            }
-            else return Unauthorized();
         }
 
         // PUT: api/Magazines/5
@@ -110,6 +93,35 @@ namespace ApiMobile.Controllers
             }
 
             return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Authenticate")]
+        public IActionResult Authenticate([FromBody] Users users)
+        {
+            var user = _userService.Authenticate(users.Email, users.Password);
+
+            if (user == null)
+                return BadRequest(new { message = "Email or password is incorrect" });
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.Id.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            string tokenString = tokenHandler.WriteToken(token);
+
+            user.AuthentificationKey = tokenString;
+            _userService.GetContext().SaveChangesAsync();
+
+            return Ok(new { Token = tokenString, ID = user.Id });
         }
 
         // POST: api/Magazines

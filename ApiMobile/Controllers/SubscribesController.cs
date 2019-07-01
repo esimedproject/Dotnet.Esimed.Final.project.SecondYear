@@ -60,6 +60,70 @@ namespace ApiMobile.Controllers
             return Ok(subscribes);
         }
 
+        // GET: api/Magazines/ByUser
+        [HttpGet("ByUser/{id}")]
+        public IActionResult GetByUserMagzines(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserMagazine = from a in _context.Magazine
+                                   join b in _context.Subscribe on a.SubscribesMagazineID
+                                   equals b.Id
+                                   where b.UserSubscribeID == id
+                                   where b.End_date_subscribe > DateTime.Now
+                                   select a;
+
+                if (UserMagazine == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserMagazine);
+            }
+            else return Unauthorized();
+        }
+
+        // GET: api/Magazines/ByUser
+        [HttpGet("ByNotUser/{id}")]
+        public IActionResult GetByUserNotSubscribes(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserMagazine = from x in _context.Magazine
+                                   join v in _context.Subscribe on x.SubscribesMagazineID
+                                  equals v.Id
+                                   where !(
+                                  from a in _context.Magazine
+                                  join b in _context.Subscribe on a.SubscribesMagazineID
+                                    equals b.Id
+                                  where b.UserSubscribeID == id
+                                  where b.End_date_subscribe > DateTime.Now
+                                  select a.Id)
+                                  .Contains(x.Id)
+                                   select x;
+
+                if (UserMagazine == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserMagazine);
+            }
+            else return Unauthorized();
+        }
+
 
         // PUT: api/Subscribes/5
         [HttpPut("{id}")]
