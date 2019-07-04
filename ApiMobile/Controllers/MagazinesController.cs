@@ -33,12 +33,19 @@ namespace ApiMobile.Controllers
             _appSettings = appSettings.Value;
         }
 
+        [AllowAnonymous]
         // GET: api/Magazines
         [HttpGet]
-        public IEnumerable<Magazines> GetMagazine()
+        public IActionResult GetMagazine()
         {
-            var mag = from i in _context.Magazine orderby i.Nom descending select i; 
-            return mag; 
+            var mag = from i in _context.Magazine orderby i.Nom descending select i;
+            return Ok(mag);
+            //string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            //if (adminstatus == "admin")
+            //{
+
+            //}
+            //else return Unauthorized();
         }
 
         // GET: api/Magazines/5
@@ -58,6 +65,69 @@ namespace ApiMobile.Controllers
             }
 
             return Ok(magazines);
+        }
+
+
+        // GET: api/Magazines/ByUser
+        [HttpGet("ByUser/{id}")]
+        public IActionResult GetByUserMagazines(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserMagazine = from a in _context.Magazine
+                                   join b in _context.Subscribe on a.SubscribesMagazineID
+                                   equals b.Id
+                                   where b.UserSubscribeID == id
+                                   where b.End_date_subscribe > DateTime.Now
+                                   select a;
+
+                if (UserMagazine == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserMagazine);
+            }
+            else return Unauthorized();
+        }
+
+        // GET: api/Magazines/ByUser
+        [HttpGet("ByNotUser/{id}")]
+        public IActionResult GetByUserNotSubscribes(int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            if (int.Parse(useremail) == id)
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var UserMagazine = from x in _context.Magazine
+                                   join v in _context.Subscribe on x.SubscribesMagazineID
+                                   equals v.Id
+                                   where !(from a in _context.Magazine
+                                           join b in _context.Subscribe on a.SubscribesMagazineID
+                                           equals b.Id
+                                           where b.UserSubscribeID == id
+                                           where b.End_date_subscribe > DateTime.Now
+                                           select a.Id).Contains(x.Id)
+                                   select x;
+
+                if (UserMagazine == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(UserMagazine);
+            }
+            else return Unauthorized();
         }
 
         // PUT: api/Magazines/5
@@ -93,35 +163,6 @@ namespace ApiMobile.Controllers
             }
 
             return NoContent();
-        }
-
-        [AllowAnonymous]
-        [HttpPost("Authenticate")]
-        public IActionResult Authenticate([FromBody] Users users)
-        {
-            var user = _userService.Authenticate(users.Email, users.Password);
-
-            if (user == null)
-                return BadRequest(new { message = "Email or password is incorrect" });
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Id.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            string tokenString = tokenHandler.WriteToken(token);
-
-            user.AuthentificationKey = tokenString;
-            _userService.GetContext().SaveChangesAsync();
-
-            return Ok(new { Token = tokenString, ID = user.Id });
         }
 
         // POST: api/Magazines

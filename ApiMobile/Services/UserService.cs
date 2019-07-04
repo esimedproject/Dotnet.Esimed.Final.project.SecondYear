@@ -30,11 +30,9 @@ namespace ApiMobile.Services
                 return null;
 
             var user = _context.User.SingleOrDefault(x => x.Email == email);
-            // check if username exists
             if (user == null)
                 return null;
             
-            // authentication successful
             return user;
         }
         public Context GetContext()

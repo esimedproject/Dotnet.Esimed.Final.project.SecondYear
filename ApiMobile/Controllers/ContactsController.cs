@@ -35,9 +35,15 @@ namespace ApiMobile.Controllers
 
         // GET: api/Contacts
         [HttpGet]
-        public IEnumerable<Contacts> GetContact()
+        public IActionResult GetContact()
         {
-            return _context.Contact;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                var cont = from i in _context.Contact orderby i.Date descending select i;
+                return Ok(cont); 
+            }
+            else return Unauthorized();
         }
 
         // GET: api/Contacts/5

@@ -18,7 +18,7 @@ using RestSharp;
 
 namespace ApiMobile.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentsController : ControllerBase
@@ -36,29 +36,40 @@ namespace ApiMobile.Controllers
 
         // GET: api/Payments
         [HttpGet]
-        public IEnumerable<Payments> GetPayment()
+        public IActionResult GetPayment()
         {
-            var pay = from i in _context.Payment orderby i.CId descending select i;
-            return pay;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                var pay = from i in _context.Payment orderby i.CId descending select i;
+                return Ok(pay);
+            }
+            else return Unauthorized();
         }
 
         // GET: api/Payments/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPayments([FromRoute] int id)
         {
-            if (!ModelState.IsValid)
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var payments = await _context.Payment.FindAsync(id);
+
+                if (payments == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(payments);
             }
-
-            var payments = await _context.Payment.FindAsync(id);
-
-            if (payments == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(payments);
+            else return Unauthorized();
         }
 
         // GET: api/Payments/ByUser/5
@@ -66,7 +77,8 @@ namespace ApiMobile.Controllers
         public IActionResult GetById(int id)
         {
             string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-            if (int.Parse(useremail) == id)
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
                 if (!ModelState.IsValid)
                 {
@@ -93,83 +105,73 @@ namespace ApiMobile.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPayments([FromRoute] int id, [FromBody] Payments payments)
         {
-            if (!ModelState.IsValid)
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
-                return BadRequest(ModelState);
-            }
-
-            if (id != payments.CId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(payments).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PaymentsExists(id))
+                if (!ModelState.IsValid)
                 {
-                    return NotFound();
+                    return BadRequest(ModelState);
                 }
-                else
+
+                if (id != payments.CId)
                 {
-                    throw;
+                    return BadRequest();
                 }
-            }
 
-            return NoContent();
-        }
+                _context.Entry(payments).State = EntityState.Modified;
 
-        // POST: api/Payments/Authenticate
-        [AllowAnonymous]
-        [HttpPost("Authenticate")]
-        public IActionResult Authenticate([FromBody] Users users)
-        {
-            var user = _userService.Authenticate(users.Email, users.Password);
-
-            if (user == null)
-                return BadRequest(new { message = "Email or password is incorrect" });
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
+                try
                 {
-                    new Claim(ClaimTypes.Name, user.Id.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            string tokenString = tokenHandler.WriteToken(token);
-
-            user.AuthentificationKey = tokenString;
-            _userService.GetContext().SaveChangesAsync();
-
-            return Ok(new { Token = tokenString, ID = user.Id });
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PaymentsExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return NoContent();
+            }
+            return Unauthorized();
+            
         }
 
         //POST: api/Payments/access
-        [HttpPost("Access")]
-        public IActionResult Access([FromBody] Payments payments)
+        [HttpPost("Access/{idUser}/{idMagazine}")]
+        public IActionResult Access([FromBody] Payments payments, int idUser,int idMagazine)
         {
-            RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
-            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.CId}/{payments.cardid}/{payments.cardmonth}/{payments.cardyear}/{payments.PaymentAmount}", Method.GET);
-            var response = ClientRest.Execute(RequestRest);
-            return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == idUser || adminstatus == "Admin")
+            {
+                RestClient ClientRest = new RestClient(new Uri(@"ec2-52-47-88-142.eu-west-3.compute.amazonaws.com"));
+                RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.CId}/{payments.cardid}/{payments.cardmonth}/{payments.cardyear}/{payments.PaymentAmount.ToString().Replace(",", ".")}", Method.GET);
+                var response = ClientRest.Execute(RequestRest);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+
+                    var objet = new Payments { MeansOfPayment = payments.MeansOfPayment, PaymentAmount = payments.PaymentAmount, CId = payments.CId, SubscribesPaymentID = int.Parse(useremail) };
+                    _context.Payment.Add(objet);
+
+                    _context.SaveChangesAsync();
+                    return Ok();
+                }
+                return BadRequest(response.ErrorException);
+            }return Unauthorized();
         }
 
         //POST: api/Payments/Refund
         [HttpPost("Refund")]
         public IActionResult Refund([FromBody] Payments payments)
         {
-            RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
-            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.transaction}", Method.GET);
+            RestClient ClientRest = new RestClient(new Uri(@"ec2-52-47-88-142.eu-west-3.compute.amazonaws.com"));
+            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.transaction.ToString().Replace(",", ".")}", Method.GET);
             var response = ClientRest.Execute(RequestRest);
             return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
         }
@@ -178,24 +180,25 @@ namespace ApiMobile.Controllers
         [HttpPost("PartialRefund")]
         public IActionResult PartialRefund([FromBody] Payments payments)
         {
-            RestClient ClientRest = new RestClient(new Uri(@"http://192.168.2.1:6543"));
-            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.transaction}/{payments.PaymentAmount}", Method.GET);
+            RestClient ClientRest = new RestClient(new Uri(@"ec2-52-47-88-142.eu-west-3.compute.amazonaws.com"));
+            RestRequest RequestRest = new RestRequest($"{payments.MeansOfPayment}/e7597a36-673b-caeb-2675-a4f65902dd13/{payments.transaction}/{payments.PaymentAmount.ToString().Replace(",", ".")}", Method.GET);
             var response = ClientRest.Execute(RequestRest);
             return response.StatusCode == System.Net.HttpStatusCode.OK ? Ok() : (IActionResult)BadRequest(response.ErrorException);
         }
 
         // POST: api/Payments
         [HttpPost]
-        public async Task<IActionResult> PostPayments(string typeofpaiment,long amount,int transac,int id)
+        public async Task<IActionResult> PostPayments(string typeofpaiment, long amount, int transac, int id)
         {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }else
             {
-                typeofpaiment = "cardpay"; 
-                var objet = new Payments { MeansOfPayment = typeofpaiment, PaymentAmount = amount, transaction = transac, CId = id  };
-                _context.Payment.Add(objet);
+
+                //_context.Payment.add();
 
                 await _context.SaveChangesAsync();
                 return Ok();

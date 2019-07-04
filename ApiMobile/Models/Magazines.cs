@@ -23,6 +23,9 @@ namespace ApiMobile.Models
         [Display(Name = "Prix")]
         [Required]
         public double Price { get; set; }
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}", ApplyFormatInEditMode = true)]
+        public DateTime? date { get; set; }
         [Display(Name = "Image")]
         [DefaultValue("/")]
         [Url]

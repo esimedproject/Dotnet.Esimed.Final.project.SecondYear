@@ -15,7 +15,8 @@ namespace ApiMobile.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Email = table.Column<string>(maxLength: 50, nullable: false),
-                    Password = table.Column<string>(nullable: false)
+                    Password = table.Column<string>(nullable: false),
+                    AuthentificationKey = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -50,6 +51,7 @@ namespace ApiMobile.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Subject = table.Column<string>(maxLength: 50, nullable: false),
+                    Means_of_contact = table.Column<string>(nullable: true),
                     Comment = table.Column<string>(nullable: true),
                     Date = table.Column<DateTime>(nullable: false),
                     UserContactID = table.Column<int>(nullable: true)
@@ -97,6 +99,7 @@ namespace ApiMobile.Migrations
                     Nom = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     Price = table.Column<double>(nullable: false),
+                    date = table.Column<DateTime>(nullable: true),
                     WallpagePATH = table.Column<string>(nullable: true),
                     SubscribesMagazineID = table.Column<int>(nullable: true)
                 },

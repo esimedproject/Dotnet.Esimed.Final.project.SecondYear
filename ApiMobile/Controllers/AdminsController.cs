@@ -1,125 +1,149 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ApiMobile.Models;
+using ApiMobile.Services;
+using ApiMobile.Helpers;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
+using System.Linq; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ApiMobile.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminsController : ControllerBase
     {
         private readonly Context _context;
+        private IAdminService _adminService;
+        private readonly AppSettings _appSettings;
 
-        public AdminsController(Context context)
+        public AdminsController(Context context, IAdminService adminService, IOptions<AppSettings> appSettings)
         {
             _context = context;
+            _adminService = adminService;
+            _appSettings = appSettings.Value;
         }
 
-        // GET: api/Admins
         [HttpGet]
-        public IEnumerable<Admins> GetAdmin()
+        public IActionResult GetAll()
         {
-            return _context.Admin;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                var admins = _adminService.GetAllAdmins();
+                return Ok(admins);
+            }
+            else return Unauthorized();
         }
 
-        // GET: api/Admins/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAdmins([FromRoute] int id)
+        public IActionResult GetById(int id)
         {
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                var admin = _adminService.GetByAdminId(id);
+                return Ok(admin);
+            }
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-
-            var admins = await _context.Admin.FindAsync(id);
-
-            if (admins == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(admins);
+            return Unauthorized();
         }
 
-        // PUT: api/Admins/5
+        [AllowAnonymous]
+        [HttpPost("AuthenticateAdmin")]
+        public IActionResult AuthenticateAdmin([FromBody] Admins admins)
+        {
+            string hash = (from i in _context.Admin where i.Email == admins.Email select i.Password).FirstOrDefault();
+            
+                var admin = _adminService.AuthenticateAdmin(admins.Email, admins.Password);
+
+                if (admin == null)
+                    return BadRequest(new { message = "Email or password is incorrect" });
+                if (Salt.ComparePassword(hash, admins.Password))
+                {
+                    var tokenHandlerad = new JwtSecurityTokenHandler();
+                var keyad = Encoding.ASCII.GetBytes(_appSettings.Secret);
+                var tokenDescriptoradmin = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new Claim[]
+                    {
+                                        new Claim(ClaimTypes.Name, admin.Id.ToString()),
+                                        new Claim(ClaimTypes.Role, "admin")
+                    }),
+                    Expires = DateTime.UtcNow.AddDays(1),
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyad), SecurityAlgorithms.HmacSha256Signature)
+                };
+                var tokenad = tokenHandlerad.CreateToken(tokenDescriptoradmin);
+                string tokenStringad = tokenHandlerad.WriteToken(tokenad);
+
+                admin.AuthentificationKey = tokenStringad;
+                _adminService.GetContextAdmins().SaveChangesAsync();
+
+                return Ok(new Admins {Email = admin.Email, AuthentificationKey =  admin.AuthentificationKey, Id = admin.Id});
+                }
+                return BadRequest(); 
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register([FromBody]Admins admin)
+        {
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                try
+                {
+                    _adminService.CreateAdmin(admin, admin.Password);
+                    return Ok();
+                }
+                catch (AppException ex)
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+            }
+            else return Unauthorized();
+        }
+
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAdmins([FromRoute] int id, [FromBody] Admins admins)
+        public IActionResult UpdateAdmin(int id, [FromBody]Admins admin)
         {
-            if (!ModelState.IsValid)
+            admin.Id = id;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
             {
-                return BadRequest(ModelState);
-            }
-
-            if (id != admins.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(admins).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AdminsExists(id))
+                try
                 {
-                    return NotFound();
+                    _adminService.UpdateAdmin(admin, admin.Password);
+                    return Ok();
                 }
-                else
+                catch (AppException ex)
                 {
-                    throw;
+                    return BadRequest(new { message = ex.Message });
                 }
             }
-
-            return NoContent();
+            return Unauthorized();
         }
 
-        // POST: api/Admins
-        [HttpPost]
-        public async Task<IActionResult> PostAdmins([FromBody] Admins admins)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _context.Admin.Add(admins);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetAdmins", new { id = admins.Id }, admins);
-        }
-
-        // DELETE: api/Admins/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAdmins([FromRoute] int id)
+        public IActionResult DeleteAdmin(int id)
         {
-            if (!ModelState.IsValid)
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
             {
-                return BadRequest(ModelState);
+                _adminService.DeleteAdmin(id);
+                return Ok();
             }
-
-            var admins = await _context.Admin.FindAsync(id);
-            if (admins == null)
-            {
-                return NotFound();
-            }
-
-            _context.Admin.Remove(admins);
-            await _context.SaveChangesAsync();
-
-            return Ok(admins);
+            return Unauthorized();
         }
 
-        private bool AdminsExists(int id)
-        {
-            return _context.Admin.Any(e => e.Id == id);
-        }
     }
 }

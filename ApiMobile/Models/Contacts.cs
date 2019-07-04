@@ -14,6 +14,8 @@ namespace ApiMobile.Models
         [Display(Name = "Sujet")]
         [Required]
         public string Subject { get; set; }
+        [Display(Name = "Moyen de contact")]
+        public string Means_of_contact { get; set; }
         [Display(Name = "Commentaires")]
         public string Comment { get; set; }
         [DataType(DataType.Date)]

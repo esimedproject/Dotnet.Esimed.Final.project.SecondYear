@@ -47,6 +47,7 @@ namespace ApiMobile
                 };
             });
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IAdminService, AdminService>();
             services.AddEntityFrameworkNpgsql().AddDbContext<Context>(opt => opt.UseNpgsql(Configuration.GetConnectionString("MyWebApiConnection")));
         }
 

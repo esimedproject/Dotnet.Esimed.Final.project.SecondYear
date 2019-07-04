@@ -48,8 +48,6 @@ namespace ApiMobile.Models
                 .HasMany<Magazines>(m=>m.SubscribeMagazine)
                 .WithOne(p=>p.Subscribe)
                 .HasForeignKey(s => s.SubscribesMagazineID);
-
-
         }       
     }
 }

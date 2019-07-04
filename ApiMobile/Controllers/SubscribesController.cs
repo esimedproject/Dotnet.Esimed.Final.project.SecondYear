@@ -23,28 +23,30 @@ namespace ApiMobile.Controllers
     public class SubscribesController : ControllerBase
     {
         private readonly Context _context;
-        private IUserService _userService;
-        private readonly AppSettings _appSettings;
 
-        public SubscribesController(Context context, IUserService userService, IOptions<AppSettings> appSettings)
+        public SubscribesController(Context context)
         {
             _context = context;
-            _userService = userService;
-            _appSettings = appSettings.Value;
         }
 
         // GET: api/Subscribes
         [HttpGet]
-        public IEnumerable<Subscribes> GetSubscribe()
+        public IActionResult GetSubscribe()
         {
-            var sub = from i in _context.Subscribe orderby i.End_date_subscribe descending select i;
-            return sub;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                var sub = from i in _context.Subscribe orderby i.End_date_subscribe descending select i;
+                return Ok(sub);
+            }
+            else return Unauthorized();
         }
 
         // GET: api/Subscribes/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSubscribes([FromRoute] int id)
         {
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -60,9 +62,9 @@ namespace ApiMobile.Controllers
             return Ok(subscribes);
         }
 
-        // GET: api/Magazines/ByUser
+        // GET: api/Payments/ByUser/5
         [HttpGet("ByUser/{id}")]
-        public IActionResult GetByUserMagzines(int id)
+        public IActionResult GetById(int id)
         {
             string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
             if (int.Parse(useremail) == id)
@@ -72,58 +74,21 @@ namespace ApiMobile.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var UserMagazine = from a in _context.Magazine
-                                   join b in _context.Subscribe on a.SubscribesMagazineID
-                                   equals b.Id
-                                   where b.UserSubscribeID == id
-                                   where b.End_date_subscribe > DateTime.Now
-                                   select a;
+                var UserPayment = from a in _context.Subscribe
+                                  join b in _context.User on a.UserSubscribeID
+                                  equals b.Id
+                                  where b.Id == id
+                                  select a;
 
-                if (UserMagazine == null)
+                if (UserPayment == null)
                 {
                     return NotFound();
                 }
 
-                return Ok(UserMagazine);
+                return Ok(UserPayment);
             }
             else return Unauthorized();
         }
-
-        // GET: api/Magazines/ByUser
-        [HttpGet("ByNotUser/{id}")]
-        public IActionResult GetByUserNotSubscribes(int id)
-        {
-            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-            if (int.Parse(useremail) == id)
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var UserMagazine = from x in _context.Magazine
-                                   join v in _context.Subscribe on x.SubscribesMagazineID
-                                  equals v.Id
-                                   where !(
-                                  from a in _context.Magazine
-                                  join b in _context.Subscribe on a.SubscribesMagazineID
-                                    equals b.Id
-                                  where b.UserSubscribeID == id
-                                  where b.End_date_subscribe > DateTime.Now
-                                  select a.Id)
-                                  .Contains(x.Id)
-                                   select x;
-
-                if (UserMagazine == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(UserMagazine);
-            }
-            else return Unauthorized();
-        }
-
 
         // PUT: api/Subscribes/5
         [HttpPut("{id}")]
@@ -158,35 +123,6 @@ namespace ApiMobile.Controllers
             }
 
             return NoContent();
-        }
-
-        [AllowAnonymous]
-        [HttpPost("Authenticate")]
-        public IActionResult Authenticate([FromBody] Users users)
-        {
-            var user = _userService.Authenticate(users.Email, users.Password);
-
-            if (user == null)
-                return BadRequest(new { message = "Email or password is incorrect" });
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Id.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            string tokenString = tokenHandler.WriteToken(token);
-
-            user.AuthentificationKey = tokenString;
-            _userService.GetContext().SaveChangesAsync();
-
-            return Ok(new { Token = tokenString, ID = user.Id });
         }
 
         // POST: api/Subscribes

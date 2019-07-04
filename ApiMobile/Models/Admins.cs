@@ -21,5 +21,7 @@ namespace ApiMobile.Models
         [Display(Name = "Mots de passe")]
         [PasswordPropertyText]
         public string Password { get; set; }
+        [Display(Name = "clé d'authentification")]
+        public string AuthentificationKey { get; set; }
     }
 }

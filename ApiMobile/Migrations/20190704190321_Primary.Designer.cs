@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ApiMobile.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20190701142943_Primary")]
+    [Migration("20190704190321_Primary")]
     partial class Primary
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,8 @@ namespace ApiMobile.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AuthentificationKey");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -46,6 +48,8 @@ namespace ApiMobile.Migrations
                     b.Property<string>("Comment");
 
                     b.Property<DateTime>("Date");
+
+                    b.Property<string>("Means_of_contact");
 
                     b.Property<string>("Subject")
                         .IsRequired()
@@ -76,6 +80,8 @@ namespace ApiMobile.Migrations
                     b.Property<int?>("SubscribesMagazineID");
 
                     b.Property<string>("WallpagePATH");
+
+                    b.Property<DateTime?>("date");
 
                     b.HasKey("Id");
 

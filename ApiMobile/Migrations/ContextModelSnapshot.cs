@@ -24,6 +24,8 @@ namespace ApiMobile.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("AuthentificationKey");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(50);
@@ -44,6 +46,8 @@ namespace ApiMobile.Migrations
                     b.Property<string>("Comment");
 
                     b.Property<DateTime>("Date");
+
+                    b.Property<string>("Means_of_contact");
 
                     b.Property<string>("Subject")
                         .IsRequired()
@@ -74,6 +78,8 @@ namespace ApiMobile.Migrations
                     b.Property<int?>("SubscribesMagazineID");
 
                     b.Property<string>("WallpagePATH");
+
+                    b.Property<DateTime?>("date");
 
                     b.HasKey("Id");
 
