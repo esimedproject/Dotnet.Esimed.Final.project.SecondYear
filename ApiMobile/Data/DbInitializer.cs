@@ -22,10 +22,10 @@ namespace ApiMobile.Data
             {
                 new Admins{
                     Email ="loic.wernert@outlook.fr",
-                    Password ="secret2"},
+                    Password = Salt.GetPasswordHash("secret2")},
                 new Admins{
                     Email ="loic.wernert@gmail.fr",
-                    Password ="secret1"}
+                    Password =Salt.GetPasswordHash("secret1")}
             };
             foreach (Admins s in Admin)
             {
@@ -110,7 +110,7 @@ namespace ApiMobile.Data
                     Date_of_birth = DateTime.Parse("09-01-2010"),
                     Address ="Paris 8ème",
                     Phone = 0788161749,
-                    Password ="password"},
+                    Password =Salt.GetPasswordHash("password")},
                 new Users {
                     Email = "alexandra.lastierier@outlook.fr",
                     Lastname = "Alexandra",
@@ -119,7 +119,7 @@ namespace ApiMobile.Data
                     Date_of_birth = DateTime.Parse("10-02-2011"),
                     Address ="Paris 7ème",
                     Phone = 0788161749,
-                    Password ="password2"}
+                    Password =Salt.GetPasswordHash("password2")}
             };
             foreach (Users s in User)
             {

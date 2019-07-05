@@ -12,6 +12,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Linq;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Threading.Tasks;
 
 namespace ApiMobile.Controllers
 {
@@ -67,12 +68,13 @@ namespace ApiMobile.Controllers
         {
             string hash = (from i in _context.User where i.Email == users.Email select i.Password).FirstOrDefault();
 
-            var user = _userService.Authenticate(users.Email, users.Password);
+            if (Salt.ComparePassword(hash, users.Password))
+            {
+                var user = _userService.Authenticate(users.Email, users.Password);
 
             if (user == null)
                 return BadRequest(new { message = "Email or password is incorrect" });
-            if (Salt.ComparePassword(hash, users.Password))
-            {
+            
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
                 var tokenDescriptor = new SecurityTokenDescriptor
@@ -90,52 +92,83 @@ namespace ApiMobile.Controllers
                 user.AuthentificationKey = tokenString;
                 _userService.GetContext().SaveChangesAsync();
 
-                return Ok(new { Token = tokenString, ID = user.Id });
-        }return BadRequest();
+                return Ok(new Users{ Email = user.Email, AuthentificationKey = user.AuthentificationKey, Id = user.Id });
+            }
+            return BadRequest();
     }
 
         [AllowAnonymous]
         [HttpPost]
         public IActionResult Register([FromBody]Users user)
         {
-            try
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin") { 
+                try
             {
-                _userService.Create(user, user.Password);
-                return Ok();
+                string hash = user.Password;
+                user.Password = Salt.GetPasswordHash(user.Password);
+                _context.User.Add(user);
+
+                _context.SaveChanges();
+
+                user.Password = hash;
+
+                Authenticate(user);
+
+                user.Password = null; 
+
+                return CreatedAtAction("GetUsers", new { id = user.Id }, user);
             }
             catch (AppException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
+            }else return Ok();
         }
 
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody]Users user)
+        public async Task<IActionResult> Update(int id, [FromBody]Users user)
         {
-            user.Id = id;
-            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;            
             string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-            if (int.Parse(useremail) == id || adminstatus == "admin")
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
+
                 if (id != user.Id)
                 {
                     return BadRequest();
                 }
+
+                if (user.Password == null)
+                {
+                    user.Password = (from c in _context.User where c.Id == id select c.Password).FirstOrDefault();
+                }
+
+                _context.Entry(user).State = EntityState.Modified;
+
                 try
                 {
-                    _userService.Update(user, user.Password);
-                    return Ok();
+                    await _context.SaveChangesAsync();
                 }
-                catch (AppException ex)
+                catch (DbUpdateConcurrencyException)
                 {
-                    return BadRequest(new { message = ex.Message });
+                    if (!UsersExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
+
+                return NoContent();
             }
-            return Unauthorized();                   
+            else return Unauthorized();
         }
 
         [HttpDelete("{id}")]
@@ -149,6 +182,10 @@ namespace ApiMobile.Controllers
                 return Ok();
             }
             else return Unauthorized();            
+        }
+        private bool UsersExists(int id)
+        {
+            return _context.User.Any(e => e.Id == id);
         }
 
     }

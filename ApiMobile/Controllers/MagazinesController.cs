@@ -33,21 +33,19 @@ namespace ApiMobile.Controllers
             _appSettings = appSettings.Value;
         }
 
-        [AllowAnonymous]
         // GET: api/Magazines
         [HttpGet]
         public IActionResult GetMagazine()
         {
-            var mag = from i in _context.Magazine orderby i.Nom descending select i;
-            return Ok(mag);
-            //string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
-            //if (adminstatus == "admin")
-            //{
 
-            //}
-            //else return Unauthorized();
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (adminstatus == "admin")
+            {
+                var mag = from i in _context.Magazine orderby i.Nom descending select i;
+                return Ok(mag);
+            }
+            else return Unauthorized();
         }
-
         // GET: api/Magazines/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMagazines([FromRoute] int id)
@@ -67,13 +65,42 @@ namespace ApiMobile.Controllers
             return Ok(magazines);
         }
 
+        // GET: api/Magazines/5
+        [HttpGet("ByUser/{id}")]
+        public IActionResult GetMagazinesOn([FromRoute] int id)
+        {
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var magazines = from a in _context.Magazine
+                                join b in _context.Subscribe on a.SubscribesMagazineID
+                                equals b.Id
+                                where b.UserSubscribeID == id
+                                select a;
+
+                if (magazines == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(magazines);
+            }return Unauthorized();
+        }
+
 
         // GET: api/Magazines/ByUser
-        [HttpGet("ByUser/{id}")]
+        [HttpGet("ByUserOn/{id}")]
         public IActionResult GetByUserMagazines(int id)
         {
             string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-            if (int.Parse(useremail) == id)
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
                 if (!ModelState.IsValid)
                 {
@@ -102,7 +129,8 @@ namespace ApiMobile.Controllers
         public IActionResult GetByUserNotSubscribes(int id)
         {
             string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-            if (int.Parse(useremail) == id)
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
                 if (!ModelState.IsValid)
                 {
@@ -134,35 +162,40 @@ namespace ApiMobile.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMagazines([FromRoute] int id, [FromBody] Magazines magazines)
         {
-            if (!ModelState.IsValid)
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
-                return BadRequest(ModelState);
-            }
-
-            if (id != magazines.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(magazines).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MagazinesExists(id))
+                if (!ModelState.IsValid)
                 {
-                    return NotFound();
+                    return BadRequest(ModelState);
                 }
-                else
+
+                if (id != magazines.Id)
                 {
-                    throw;
+                    return BadRequest();
+                }
+
+                _context.Entry(magazines).State = EntityState.Modified;
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return Ok();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!MagazinesExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
-
-            return NoContent();
+            else return Unauthorized();
         }
 
         // POST: api/Magazines

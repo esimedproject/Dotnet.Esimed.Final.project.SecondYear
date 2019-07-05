@@ -156,7 +156,7 @@ namespace ApiMobile.Controllers
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
 
-                    var objet = new Payments { MeansOfPayment = payments.MeansOfPayment, PaymentAmount = payments.PaymentAmount, CId = payments.CId, SubscribesPaymentID = int.Parse(useremail) };
+                    var objet = new Payments { MeansOfPayment = payments.MeansOfPayment, PaymentAmount = payments.PaymentAmount, CId = payments.CId  };
                     _context.Payment.Add(objet);
 
                     _context.SaveChangesAsync();
@@ -191,18 +191,21 @@ namespace ApiMobile.Controllers
         public async Task<IActionResult> PostPayments(string typeofpaiment, long amount, int transac, int id)
         {
             string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }else
+            string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
 
-                //_context.Payment.add();
-
-                await _context.SaveChangesAsync();
-                return Ok();
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                else
+                {
+                    await _context.SaveChangesAsync();
+                    return Ok();
+                }
             }
+            else return Unauthorized(); 
         }
 
         // DELETE: api/Payments/5

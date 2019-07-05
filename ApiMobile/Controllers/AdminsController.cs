@@ -11,6 +11,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Linq; 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace ApiMobile.Controllers
 {
@@ -63,14 +65,16 @@ namespace ApiMobile.Controllers
         public IActionResult AuthenticateAdmin([FromBody] Admins admins)
         {
             string hash = (from i in _context.Admin where i.Email == admins.Email select i.Password).FirstOrDefault();
-            
+
+
+            if (Salt.ComparePassword(hash, admins.Password))
+            {
                 var admin = _adminService.AuthenticateAdmin(admins.Email, admins.Password);
 
                 if (admin == null)
                     return BadRequest(new { message = "Email or password is incorrect" });
-                if (Salt.ComparePassword(hash, admins.Password))
-                {
-                    var tokenHandlerad = new JwtSecurityTokenHandler();
+
+                var tokenHandlerad = new JwtSecurityTokenHandler();
                 var keyad = Encoding.ASCII.GetBytes(_appSettings.Secret);
                 var tokenDescriptoradmin = new SecurityTokenDescriptor
                 {
@@ -82,55 +86,91 @@ namespace ApiMobile.Controllers
                     Expires = DateTime.UtcNow.AddDays(1),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyad), SecurityAlgorithms.HmacSha256Signature)
                 };
+
                 var tokenad = tokenHandlerad.CreateToken(tokenDescriptoradmin);
                 string tokenStringad = tokenHandlerad.WriteToken(tokenad);
 
                 admin.AuthentificationKey = tokenStringad;
                 _adminService.GetContextAdmins().SaveChangesAsync();
 
-                return Ok(new Admins {Email = admin.Email, AuthentificationKey =  admin.AuthentificationKey, Id = admin.Id});
-                }
+
+                return Ok(new Admins { Email = admin.Email, AuthentificationKey = admin.AuthentificationKey, Id = admin.Id });
+            }
                 return BadRequest(); 
         }
 
         [AllowAnonymous]
-        [HttpPost("register")]
+        [HttpPost]
         public IActionResult Register([FromBody]Admins admin)
         {
             string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (adminstatus == "admin")
-            {
+            if (adminstatus == "admin") { 
                 try
                 {
-                    _adminService.CreateAdmin(admin, admin.Password);
-                    return Ok();
+                    string hash = admin.Password;
+                    admin.Password = Salt.GetPasswordHash(admin.Password);
+                    _context.Admin.Add(admin);
+
+                    _context.SaveChanges();
+
+                    admin.Password = hash;
+
+                    AuthenticateAdmin(admin);
+
+                    admin.Password = null;
+
+                    return CreatedAtAction("GetUsers", new { id = admin.Id }, admin);
                 }
                 catch (AppException ex)
                 {
                     return BadRequest(new { message = ex.Message });
                 }
-            }
-            else return Unauthorized();
+            }else return Unauthorized();
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateAdmin(int id, [FromBody]Admins admin)
+        public async Task<IActionResult> UpdateAdmin(int id, [FromBody]Admins admin)
         {
-            admin.Id = id;
+            string useremail = User.FindFirst(ClaimTypes.Name)?.Value;
             string adminstatus = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (adminstatus == "admin")
+            if (int.Parse(useremail) == id || adminstatus == "Admin")
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                if (id != admin.Id)
+                {
+                    return BadRequest();
+                }
+
+                if (admin.Password == null)
+                {
+                    admin.Password = (from c in _context.Admin where c.Id == id select c.Password).FirstOrDefault();
+                }
+
+                _context.Entry(admin).State = EntityState.Modified;
+
                 try
                 {
-                    _adminService.UpdateAdmin(admin, admin.Password);
-                    return Ok();
+                    await _context.SaveChangesAsync();
                 }
-                catch (AppException ex)
+                catch (DbUpdateConcurrencyException)
                 {
-                    return BadRequest(new { message = ex.Message });
+                    if (!AdminsExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
+
+                return NoContent();
             }
-            return Unauthorized();
+            else return Unauthorized();
         }
 
         [HttpDelete("{id}")]
@@ -143,6 +183,10 @@ namespace ApiMobile.Controllers
                 return Ok();
             }
             return Unauthorized();
+        }
+        private bool AdminsExists(int id)
+        {
+            return _context.Admin.Any(e => e.Id == id);
         }
 
     }
